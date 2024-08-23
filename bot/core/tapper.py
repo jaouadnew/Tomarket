@@ -123,7 +123,7 @@ class Tapper:
         return response.get('data', {}).get('access_token', None)
 
     @error_handler
-    async def check_proxy(self, http_client: aiohttp.ClientSession) -> None:
+    async def check_proxy(self, http_client) -> None:
         response = await self.make_request(http_client, 'GET', url='https://httpbin.org/ip', timeout=aiohttp.ClientTimeout(5))
         ip = response.get('origin')
         logger.info(f"{self.session_name} | Proxy IP: {ip}")
