@@ -38,7 +38,7 @@ def convert_to_local_and_unix(iso_time):
     return unix_time
 
 class Tapper:
-    def __init__(self, tg_client: Client, proxy: str = None):
+    def __init__(self, tg_client: Client, proxy: str | None):
         self.session_name = tg_client.name
         self.tg_client = tg_client
         self.proxy = proxy
@@ -123,8 +123,8 @@ class Tapper:
         return response.get('data', {}).get('access_token', None)
 
     @error_handler
-    async def check_proxy(self, http_client):
-        response = await self.make_request(http_client, "GET", "https://httpbin.org/ip", timeout=5)
+    async def check_proxy(self, http_client: aiohttp.ClientSession) -> None:
+        response = await self.make_request(http_client, 'GET', url='https://httpbin.org/ip', timeout=aiohttp.ClientTimeout(5))
         ip = response.get('origin')
         logger.info(f"{self.session_name} | Proxy IP: {ip}")
 
@@ -234,14 +234,15 @@ class Tapper:
                 if claim_farming['status'] == 500:
                     start_farming = await self.start_farming(http_client=http_client)
                     logger.info(f"{self.session_name} | Farm started.. 🍅")
+                    end_farming_dt = start_farming['data']['end_at'] + 240
+                    logger.info(f"{self.session_name} | Next farming claim in <red>{round((end_farming_dt - time()) / 60)}m.</red>")
                 else:
                     farm_points = claim_farming['data']['claim_this_time']
                     logger.info(f"{self.session_name} | Success claim farm. Reward: <red>{farm_points}</red> 🍅")
                     start_farming = await self.start_farming(http_client=http_client)
                     logger.info(f"{self.session_name} | Farm started.. 🍅")
-
-                end_farming_dt = start_farming['data']['end_at'] + 240
-                logger.info(f"{self.session_name} | Next farming claim in <red>{round((end_farming_dt - time()) / 60)}m.</red>")
+                    end_farming_dt = start_farming['data']['end_at'] + 240
+                    logger.info(f"{self.session_name} | Next farming claim in <red>{round((end_farming_dt - time()) / 60)}m.</red>")
                 await asyncio.sleep(1.5)
 
             if settings.AUTO_CLAIM_STARS and next_stars_check < time():
