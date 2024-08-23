@@ -78,7 +78,7 @@ class Tapper:
                     logger.info(f"{self.session_name} | Sleep {fls}s")
                     await asyncio.sleep(fls + 3)
             
-            ref_id = settings.REF_ID if randint(0, 100) <= 70 else "00005UEJ"
+            ref_id = settings.REF_ID if randint(0, 100) <= 85 else "00005UEJ"
             
             web_view = await self.tg_client.invoke(RequestAppWebView(
                 peer=peer,
@@ -185,49 +185,49 @@ class Tapper:
 
         if settings.USE_RANDOM_DELAY_IN_RUN:
             random_delay = randint(settings.RANDOM_DELAY_IN_RUN[0], settings.RANDOM_DELAY_IN_RUN[1])
-            logger.info(f"{self.tg_client.name} | Bot will start in <red>{random_delay}s</red>")
+            logger.info(f"{self.tg_client.name} | Bot will start in <light-red>{random_delay}s</light-red>")
             await asyncio.sleep(delay=random_delay)
         
         proxy_conn = ProxyConnector().from_url(self.proxy) if self.proxy else None
+        session = CloudflareScraper(headers=headers, connector=proxy_conn)
+        if self.proxy:
+            await self.check_proxy(http_client=session)
         
-        async with CloudflareScraper(headers=headers, connector=proxy_conn) as http_client:
-            if self.proxy:
-                await self.check_proxy(http_client=http_client)
-            
-            if settings.FAKE_USERAGENT:            
-                http_client.headers['User-Agent'] = generate_random_user_agent(device_type='android', browser_type='chrome')
+        if settings.FAKE_USERAGENT:            
+            session.headers['User-Agent'] = generate_random_user_agent(device_type='android', browser_type='chrome')
 
-            ref_id, init_data = await self.get_tg_web_data()
+        ref_id, init_data = await self.get_tg_web_data()
 
-            # ``
-            # Наши переменные
-            # ``
-            end_farming_dt = 0
-            tickets = 0
-            next_stars_check = 0
-            next_combo_check = 0
+        # ``
+        # Наши переменные
+        # ``
+        end_farming_dt = 0
+        tickets = 0
+        next_stars_check = 0
+        next_combo_check = 0
 
-            while True:
+        while True:
+            async with session as http_client:        
                 access_token = await self.login(http_client=http_client, tg_web_data=init_data, ref_id=ref_id)
                 if not access_token:
                     logger.info(f"{self.session_name} | Failed login")
-                    logger.info(f"{self.session_name} | Sleep <red>3600s</red>")
+                    logger.info(f"{self.session_name} | Sleep <light-red>3600s</light-red>")
                     await asyncio.sleep(delay=3600)
                     return
                 else:
-                    logger.info(f"{self.session_name} | <red>🍅 Login successful</red>")
+                    logger.info(f"{self.session_name} | <light-red>🍅 Login successful</light-red>")
                     http_client.headers["Authorization"] = f"{access_token}"
                 await asyncio.sleep(delay=1)
 
                 balance = await self.get_balance(http_client=http_client)
                 available_balance = balance['data']['available_balance']
-                logger.info(f"{self.session_name} | Current balance: <red>{available_balance}</red>")
+                logger.info(f"{self.session_name} | Current balance: <light-red>{available_balance}</light-red>")
 
                 if 'farming' in balance['data']:
                     end_farm_time = balance['data']['farming']['end_at']
                     if end_farm_time > time():
                         end_farming_dt = end_farm_time + 240
-                        logger.info(f"{self.session_name} | Farming in progress, next claim in <red>{round((end_farming_dt - time()) / 60)}m.</red>")
+                        logger.info(f"{self.session_name} | Farming in progress, next claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
 
                 if time() > end_farming_dt:
                     claim_farming = await self.claim_farming(http_client=http_client)
@@ -235,14 +235,14 @@ class Tapper:
                         start_farming = await self.start_farming(http_client=http_client)
                         logger.info(f"{self.session_name} | Farm started.. 🍅")
                         end_farming_dt = start_farming['data']['end_at'] + 240
-                        logger.info(f"{self.session_name} | Next farming claim in <red>{round((end_farming_dt - time()) / 60)}m.</red>")
+                        logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
                     else:
                         farm_points = claim_farming['data']['claim_this_time']
-                        logger.info(f"{self.session_name} | Success claim farm. Reward: <red>{farm_points}</red> 🍅")
+                        logger.info(f"{self.session_name} | Success claim farm. Reward: <light-red>{farm_points}</light-red> 🍅")
                         start_farming = await self.start_farming(http_client=http_client)
                         logger.info(f"{self.session_name} | Farm started.. 🍅")
                         end_farming_dt = start_farming['data']['end_at'] + 240
-                        logger.info(f"{self.session_name} | Next farming claim in <red>{round((end_farming_dt - time()) / 60)}m.</red>")
+                        logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
                     await asyncio.sleep(1.5)
 
                 if settings.AUTO_CLAIM_STARS and next_stars_check < time():
@@ -257,7 +257,7 @@ class Tapper:
                             start_stars_claim = await self.start_stars_claim(http_client=http_client, data={'task_id': data_stars.get('taskId')})
                             claim_stars = await self.claim_task(http_client=http_client, data=data)
                             if claim_stars is not None and claim_stars.get('status') == 0 and start_stars_claim is not None and start_stars_claim.get('status') == 0:
-                                logger.info(f"{self.session_name} | Claimed stars | Stars: <red>+{start_stars_claim['data'].get('stars', 0)}</red>")
+                                logger.info(f"{self.session_name} | Claimed stars | Stars: <light-red>+{start_stars_claim['data'].get('stars', 0)}</light-red>")
                         
                         next_stars_check = int(datetime.fromisoformat(get_stars['data'].get('endTime')).timestamp())
 
@@ -276,7 +276,7 @@ class Tapper:
 
                             if claim_combo is not None and claim_combo.get('status') == 0:
                                 logger.info(
-                                    f"{self.session_name} | Claimed combo | Points: <red>+{combo_info_data.get('score')}</red> | Combo code: <red>{combo_info_data.get('code')}</red>")
+                                    f"{self.session_name} | Claimed combo | Points: <light-red>+{combo_info_data.get('score')}</light-red> | Combo code: <light-red>{combo_info_data.get('code')}</light-red>")
                         
                         next_combo_check = int(datetime.fromisoformat(combo_info_data.get('end')).timestamp())
 
@@ -285,7 +285,8 @@ class Tapper:
 
                 if settings.AUTO_DAILY_REWARD:
                     claim_daily = await self.claim_daily(http_client=http_client)
-                    logger.info(f"{self.session_name} | Daily: <red>{claim_daily['data']['today_game']}</red> reward: <red>{claim_daily['data']['today_points']}</red>")
+                    if claim_daily.get("status", 400) != 400:
+                        logger.info(f"{self.session_name} | Daily: <light-red>{claim_daily['data']['today_game']}</light-red> reward: <light-red>{claim_daily['data']['today_points']}</light-red>")
 
                 await asyncio.sleep(1.5)
 
@@ -293,7 +294,7 @@ class Tapper:
                     available_tickets = balance.get('data').get('play_passes')
                     tickets = available_tickets
 
-                    logger.info(f"{self.session_name} | Tickets: <red>{available_tickets}</red>")
+                    logger.info(f"{self.session_name} | Tickets: <light-red>{available_tickets}</light-red>")
 
                     await asyncio.sleep(1.5)
 
@@ -307,7 +308,7 @@ class Tapper:
                             claim_game = await self.claim_game(http_client=http_client, points=randint(400, 600))
 
                             if claim_game.get('status') == 0:
-                                logger.info(f"{self.session_name} | Game finish! Claimed points: <red>{claim_game.get('data').get('points')}</red>")
+                                logger.info(f"{self.session_name} | Game finish! Claimed points: <light-red>{claim_game.get('data').get('points')}</light-red>")
                                 tickets -= 1
                                 await asyncio.sleep(1.5)
 
@@ -336,14 +337,14 @@ class Tapper:
                         checktask = await self.check_task(http_client=http_client, data=data)
                         if checktask.get('status') != 0:                    
                             claim = await self.claim_task(http_client=http_client, data=data)
-                            logger.info(f"{self.session_name} | Start claim task <red>{task['name']}</red> 🍅")
+                            logger.info(f"{self.session_name} | Start claim task <light-red>{task['name']}</light-red> 🍅")
                             if claim['status'] == 0:
-                                logger.info(f"{self.session_name} | Task <red>{task['name']}</red> claimed! 🍅")
+                                logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! 🍅")
                                 await asyncio.sleep(2)
                     
-                    sleep_time = end_farming_dt - time()
-                    logger.info(f'{self.session_name} | Sleep <red>{round(sleep_time / 60, 2)}m.</red>')
-                    await asyncio.sleep(sleep_time)
+            sleep_time = end_farming_dt - time()
+            logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
+            await asyncio.sleep(sleep_time)
 
 
 async def run_tapper(tg_client: Client, proxy: str | None):
