@@ -5,6 +5,7 @@ from time import time
 from urllib.parse import unquote, quote
 
 from aiocfscrape import CloudflareScraper
+import aiohttp
 from aiohttp_proxy import ProxyConnector
 from better_proxy import Proxy
 from pyrogram import Client
@@ -28,7 +29,6 @@ def error_handler(func: Callable):
             return await func(*args, **kwargs)
         except Exception as e:
             await asyncio.sleep(1)
-            logger.error(f"{args[0].session_name} | {func.__name__} error: {e}")
     return wrapper
 
 def convert_to_local_and_unix(iso_time):
@@ -123,7 +123,7 @@ class Tapper:
         return response.get('data', {}).get('access_token', None)
 
     @error_handler
-    async def check_proxy(self, http_client) -> None:
+    async def check_proxy(self, http_client: aiohttp.ClientSession) -> None:
         response = await self.make_request(http_client, 'GET', url='https://httpbin.org/ip', timeout=aiohttp.ClientTimeout(5))
         ip = response.get('origin')
         logger.info(f"{self.session_name} | Proxy IP: {ip}")
