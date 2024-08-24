@@ -347,14 +347,14 @@ class Tapper:
                                 logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! 🍅")
                                 await asyncio.sleep(2)
                 
-                if http_client and not http_client.closed:
-                    await http_client.close()
-                    if proxy_conn and not proxy_conn.closed:
-                            proxy_conn.close()
-                            
-                sleep_time = end_farming_dt - time()
-                logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
-                await asyncio.sleep(sleep_time)
+            if http_client and not http_client.closed:
+                await http_client.close()
+                if proxy_conn and not proxy_conn.closed:
+                        proxy_conn.close()
+                        
+            sleep_time = end_farming_dt - time()
+            logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
+            await asyncio.sleep(sleep_time)
                 
 
 
