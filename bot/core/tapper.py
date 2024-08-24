@@ -334,18 +334,19 @@ class Tapper:
                                     tasks_list.append(task)
                 
                 for task in tasks_list:
-                    data = {'task_id': task['taskId']}
                     wait_second = task.get('waitSecond', 0)
-                    starttask = await self.start_task(http_client=http_client, data=data)
+                    starttask = await self.start_task(http_client=http_client, data={'task_id': task['taskId']})
                     if starttask.get('data') and starttask.get('data', {}).get('status', 3) != 3:
+                        logger.info(f"{self.session_name} | Start task <light-red>{task['name']}</light-red> 🍅")
                         await asyncio.sleep(wait_second)
-                        checktask = await self.check_task(http_client=http_client, data=data)
-                        if checktask.get('status') != 0:                    
-                            claim = await self.claim_task(http_client=http_client, data=data)
-                            logger.info(f"{self.session_name} | Start claim task <light-red>{task['name']}</light-red> 🍅")
-                            if claim['status'] == 0:
-                                logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! 🍅")
-                                await asyncio.sleep(2)
+                        await self.check_task(http_client=http_client, data={'task_id': task['taskId']})                    
+                        claim = await self.claim_task(http_client=http_client, data={'task_id': task['taskId']})
+                        if claim['status'] == 0:
+                            logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! 🍅")
+                            await asyncio.sleep(2)
+                        else:
+                            logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red>not claimed! 🍅")
+                            await asyncio.sleep(2)
                 
             if http_client and not http_client.closed:
                 await http_client.close()
