@@ -321,7 +321,7 @@ class Tapper:
                 tasks = await self.get_tasks(http_client=http_client)
 
                 tasks_list = []
-                if tasks.get("status", 500) == 0:
+                if tasks is not None and tasks.get("status", 500) == 0:
                     for values in tasks["data"].values():
                         for task in values:
                             if task.get('enable'):
