@@ -337,7 +337,7 @@ class Tapper:
                     wait_second = task.get('waitSecond', 0)
                     starttask = await self.start_task(http_client=http_client, data={'task_id': task['taskId']})
                     if starttask.get('data') and starttask.get('data', {}).get('status', 3) != 3:
-                        logger.info(f"{self.session_name} | Start task <light-red>{task['name']}</light-red> 🍅")
+                        logger.info(f"{self.session_name} | Start task <light-red>{task['name']}.</light-red> Wait {wait_second}s 🍅")
                         await asyncio.sleep(wait_second)
                         await self.check_task(http_client=http_client, data={'task_id': task['taskId']})                    
                         claim = await self.claim_task(http_client=http_client, data={'task_id': task['taskId']})
