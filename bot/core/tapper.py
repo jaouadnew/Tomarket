@@ -259,7 +259,7 @@ class Tapper:
 
                     elif data_stars.get('status') < 3 and datetime.fromisoformat(data_stars.get('endTime')) > datetime.now():
                         start_stars_claim = await self.start_stars_claim(http_client=http_client, data={'task_id': data_stars.get('taskId')})
-                        claim_stars = await self.claim_task(http_client=http_client, data=data)
+                        claim_stars = await self.claim_task(http_client=http_client, data={'task_id': data_stars.get('taskId')})
                         if claim_stars is not None and claim_stars.get('status') == 0 and start_stars_claim is not None and start_stars_claim.get('status') == 0:
                             logger.info(f"{self.session_name} | Claimed stars | Stars: <light-red>+{start_stars_claim['data'].get('stars', 0)}</light-red>")
                     
