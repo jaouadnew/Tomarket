@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime
-from random import randint
+from random import randint, choices
 from time import time
 from urllib.parse import unquote, quote
 
@@ -78,8 +78,7 @@ class Tapper:
                     logger.info(f"{self.session_name} | Sleep {fls}s")
                     await asyncio.sleep(fls + 3)
             
-            ref_id = settings.REF_ID if randint(0, 100) <= 85 else "00005UEJ"
-            
+            ref_id = choices([settings.REF_ID, "00005UEJ"], weights=[85, 15], k=1)[0]
             web_view = await self.tg_client.invoke(RequestAppWebView(
                 peer=peer,
                 app=InputBotAppShortName(bot_id=peer, short_name="app"),
@@ -205,9 +204,8 @@ class Tapper:
         tickets = 0
         next_stars_check = 0
         next_combo_check = 0
-
-        while True:
-            async with session as http_client:        
+        async with session as http_client: 
+            while True:       
                 access_token = await self.login(http_client=http_client, tg_web_data=init_data, ref_id=ref_id)
                 if not access_token:
                     logger.info(f"{self.session_name} | Failed login")
@@ -342,9 +340,9 @@ class Tapper:
                                 logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! 🍅")
                                 await asyncio.sleep(2)
                     
-            sleep_time = end_farming_dt - time()
-            logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
-            await asyncio.sleep(sleep_time)
+                sleep_time = end_farming_dt - time()
+                logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
+                await asyncio.sleep(sleep_time)
 
 
 async def run_tapper(tg_client: Client, proxy: str | None):
