@@ -7,7 +7,13 @@ class Settings(BaseSettings):
     API_ID: int
     API_HASH: str
 
-    REF_ID: str = '00005UEJ'
+    REF_ID: str = '0000369k'
+
+Hey, if you're a Hamster, DOGS, Blum or Catizen user... you have something very special to claim in the Tomarket app now.
+
+The Tomarket airdrop is coming! 🪂
+
+Claim with this link.'
     
     FAKE_USERAGENT: bool = True
     AUTO_PLAY_GAME: bool = True
