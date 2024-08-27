@@ -336,7 +336,7 @@ class Tapper:
                 for task in tasks_list:
                     wait_second = task.get('waitSecond', 0)
                     starttask = await self.start_task(http_client=http_client, data={'task_id': task['taskId']})
-                    if starttask is not None and starttask.get('data') and starttask.get('data', {}).get('status', 3) != 3:
+                    if starttask and starttask.get('data', 'Failed') == 'ok':
                         logger.info(f"{self.session_name} | Start task <light-red>{task['name']}.</light-red> Wait {wait_second}s 🍅")
                         await asyncio.sleep(wait_second)
                         await self.check_task(http_client=http_client, data={'task_id': task['taskId']})                    
@@ -345,7 +345,7 @@ class Tapper:
                             logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! 🍅")
                             await asyncio.sleep(2)
                         else:
-                            logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red>not claimed! 🍅")
+                            logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> not claimed! 🍅")
                             await asyncio.sleep(2)
                 
             if http_client and not http_client.closed:
