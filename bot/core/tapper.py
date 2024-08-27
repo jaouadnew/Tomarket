@@ -235,7 +235,7 @@ class Tapper:
 
             if time() > end_farming_dt:
                 claim_farming = await self.claim_farming(http_client=http_client)
-                if claim_farming['status'] == 500:
+                if claim_farming and claim_farming.get('status', 0) == 500:
                     start_farming = await self.start_farming(http_client=http_client)
                     logger.info(f"{self.session_name} | Farm started.. 🍅")
                     end_farming_dt = start_farming['data']['end_at'] + 240
