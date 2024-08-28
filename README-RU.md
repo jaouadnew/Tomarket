@@ -26,6 +26,7 @@
 |         **API_ID**            |        Ваш Telegram API ID (целое число)                                              |
 |         **API_HASH**          |        Ваш Telegram API Hash (строка)                                                 |
 |         **REF_ID**            |        Ваш реферальный ID после startapp=                           |
+|         **POINTS_COUNT**      |        Количество поинтов за игру (например, [450, 600])      |         
 |      **FAKE_USERAGENT**       |        Использовать поддельный user agent для сессий (True / False)                   |
 |      **AUTO_PLAY_GAME**       |        Автоматически играть в игры (True / False)                                     |
 |         **AUTO_TASK**         |        Автоматически выполнять задания (True / False)                                 |

@@ -28,6 +28,7 @@
 |  **API_ID**             |        Your Telegram API ID (integer)                                                  |
 |  **API_HASH**           |        Your Telegram API Hash (string)                                                 |
 |  **REF_ID**             |        Your referral id after startapp=                             |
+| **POINTS_COUNT**        | Number of points per game (e.g., [450, 600]) |
 |  **FAKE_USERAGENT**     |        Use a fake user agent for sessions (True / False)                               |
 |  **AUTO_PLAY_GAME**     |        Automatically play games (True / False)                                         |
 |  **AUTO_TASK**          |        Automatically complete tasks (True / False)                                     |
