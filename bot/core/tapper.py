@@ -235,18 +235,18 @@ class Tapper:
 
             if time() > end_farming_dt:
                 claim_farming = await self.claim_farming(http_client=http_client)
-                if claim_farming:
-                    if claim_farming.get('status', 0) == 500:
+                if claim_farming and 'status' in claim_farming:
+                    if claim_farming.get('status') == 500:
                         start_farming = await self.start_farming(http_client=http_client)
-                        if start_farming:
+                        if start_farming and 'status' in start_farming and start_farming['status'] in [0, 200]:
                             logger.info(f"{self.session_name} | Farm started.. 🍅")
                             end_farming_dt = start_farming['data']['end_at'] + 240
                             logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
-                    else:
+                    elif claim_farming.get('status'):
                         farm_points = claim_farming['data']['claim_this_time']
                         logger.info(f"{self.session_name} | Success claim farm. Reward: <light-red>{farm_points}</light-red> 🍅")
                         start_farming = await self.start_farming(http_client=http_client)
-                        if start_farming:
+                        if start_farming and 'status' in start_farming and start_farming['status'] in [0, 200]:
                             logger.info(f"{self.session_name} | Farm started.. 🍅")
                             end_farming_dt = start_farming['data']['end_at'] + 240
                             logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
