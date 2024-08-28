@@ -205,161 +205,162 @@ class Tapper:
         next_stars_check = 0
         next_combo_check = 0
         while True:
-            if http_client.closed:
-                if proxy_conn:
-                    if not proxy_conn.closed:
-                        proxy_conn.close()
+            try:
+                if http_client.closed:
+                    if proxy_conn:
+                        if not proxy_conn.closed:
+                            proxy_conn.close()
 
-                proxy_conn = ProxyConnector().from_url(self.proxy) if self.proxy else None
-                http_client = aiohttp.ClientSession(headers=headers, connector=proxy_conn)
-            access_token = await self.login(http_client=http_client, tg_web_data=init_data, ref_id=ref_id)
-            if not access_token:
-                logger.info(f"{self.session_name} | Failed login")
-                logger.info(f"{self.session_name} | Sleep <light-red>3600s</light-red>")
-                await asyncio.sleep(delay=3600)
-                return
-            else:
-                logger.info(f"{self.session_name} | <light-red>🍅 Login successful</light-red>")
-                http_client.headers["Authorization"] = f"{access_token}"
-            await asyncio.sleep(delay=1)
+                    proxy_conn = ProxyConnector().from_url(self.proxy) if self.proxy else None
+                    http_client = aiohttp.ClientSession(headers=headers, connector=proxy_conn)
+                access_token = await self.login(http_client=http_client, tg_web_data=init_data, ref_id=ref_id)
+                if not access_token:
+                    logger.info(f"{self.session_name} | Failed login")
+                    logger.info(f"{self.session_name} | Sleep <light-red>3600s</light-red>")
+                    await asyncio.sleep(delay=3600)
+                    return
+                else:
+                    logger.info(f"{self.session_name} | <light-red>🍅 Login successful</light-red>")
+                    http_client.headers["Authorization"] = f"{access_token}"
+                await asyncio.sleep(delay=1)
 
-            balance = await self.get_balance(http_client=http_client)
-            available_balance = balance['data']['available_balance']
-            logger.info(f"{self.session_name} | Current balance: <light-red>{available_balance}</light-red>")
+                balance = await self.get_balance(http_client=http_client)
+                available_balance = balance['data']['available_balance']
+                logger.info(f"{self.session_name} | Current balance: <light-red>{available_balance}</light-red>")
 
-            if 'farming' in balance['data']:
-                end_farm_time = balance['data']['farming']['end_at']
-                if end_farm_time > time():
-                    end_farming_dt = end_farm_time + 240
-                    logger.info(f"{self.session_name} | Farming in progress, next claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
+                if 'farming' in balance['data']:
+                    end_farm_time = balance['data']['farming']['end_at']
+                    if end_farm_time > time():
+                        end_farming_dt = end_farm_time + 240
+                        logger.info(f"{self.session_name} | Farming in progress, next claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
 
-            if time() > end_farming_dt:
-                claim_farming = await self.claim_farming(http_client=http_client)
-                if claim_farming and 'status' in claim_farming:
-                    if claim_farming.get('status') == 500:
-                        start_farming = await self.start_farming(http_client=http_client)
-                        if start_farming and 'status' in start_farming and start_farming['status'] in [0, 200]:
-                            logger.info(f"{self.session_name} | Farm started.. 🍅")
-                            end_farming_dt = start_farming['data']['end_at'] + 240
-                            logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
-                    elif claim_farming.get('status') == 0:
-                        farm_points = claim_farming['data']['claim_this_time']
-                        logger.info(f"{self.session_name} | Success claim farm. Reward: <light-red>{farm_points}</light-red> 🍅")
-                        start_farming = await self.start_farming(http_client=http_client)
-                        if start_farming and 'status' in start_farming and start_farming['status'] in [0, 200]:
-                            logger.info(f"{self.session_name} | Farm started.. 🍅")
-                            end_farming_dt = start_farming['data']['end_at'] + 240
-                            logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
-                await asyncio.sleep(1.5)
+                if time() > end_farming_dt:
+                    claim_farming = await self.claim_farming(http_client=http_client)
+                    if claim_farming and 'status' in claim_farming:
+                        if claim_farming.get('status') == 500:
+                            start_farming = await self.start_farming(http_client=http_client)
+                            if start_farming and 'status' in start_farming and start_farming['status'] in [0, 200]:
+                                logger.info(f"{self.session_name} | Farm started.. 🍅")
+                                end_farming_dt = start_farming['data']['end_at'] + 240
+                                logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
+                        elif claim_farming.get('status') == 0:
+                            farm_points = claim_farming['data']['claim_this_time']
+                            logger.info(f"{self.session_name} | Success claim farm. Reward: <light-red>{farm_points}</light-red> 🍅")
+                            start_farming = await self.start_farming(http_client=http_client)
+                            if start_farming and 'status' in start_farming and start_farming['status'] in [0, 200]:
+                                logger.info(f"{self.session_name} | Farm started.. 🍅")
+                                end_farming_dt = start_farming['data']['end_at'] + 240
+                                logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
+                    await asyncio.sleep(1.5)
 
-            if settings.AUTO_CLAIM_STARS and next_stars_check < time():
-                get_stars = await self.get_stars(http_client)
-                if get_stars:
-                    data_stars = get_stars.get('data', {})
-                    if get_stars and get_stars.get('status', -1) == 0 and data_stars:
-                        
-                        if data_stars.get('status') > 2:
-                            logger.info(f"{self.session_name} | Stars already claimed | Skipping....")
+                if settings.AUTO_CLAIM_STARS and next_stars_check < time():
+                    get_stars = await self.get_stars(http_client)
+                    if get_stars:
+                        data_stars = get_stars.get('data', {})
+                        if get_stars and get_stars.get('status', -1) == 0 and data_stars:
+                            
+                            if data_stars.get('status') > 2:
+                                logger.info(f"{self.session_name} | Stars already claimed | Skipping....")
 
-                        elif data_stars.get('status') < 3 and datetime.fromisoformat(data_stars.get('endTime')) > datetime.now():
-                            start_stars_claim = await self.start_stars_claim(http_client=http_client, data={'task_id': data_stars.get('taskId')})
-                            claim_stars = await self.claim_task(http_client=http_client, data={'task_id': data_stars.get('taskId')})
-                            if claim_stars is not None and claim_stars.get('status') == 0 and start_stars_claim is not None and start_stars_claim.get('status') == 0:
-                                logger.info(f"{self.session_name} | Claimed stars | Stars: <light-red>+{start_stars_claim['data'].get('stars', 0)}</light-red>")
-                        
-                        next_stars_check = int(datetime.fromisoformat(get_stars['data'].get('endTime')).timestamp())
-
-            await asyncio.sleep(1.5)
-
-            if settings.AUTO_CLAIM_COMBO and next_combo_check < time():
-                combo_info = await self.get_combo(http_client)
-                combo_info_data = combo_info.get('data', [])[0] if combo_info.get('data') else []
-
-                if combo_info and combo_info.get('status') == 0 and combo_info_data:
-                    if combo_info_data.get('status') > 0:
-                        logger.info(f"{self.session_name} | Combo already claimed | Skipping....")
-                    elif combo_info_data.get('status') == 0 and datetime.fromisoformat(
-                            combo_info_data.get('end')) > datetime.now():
-                        claim_combo = await self.claim_task(http_client, data = { 'task_id': combo_info_data.get('taskId') })
-
-                        if claim_combo is not None and claim_combo.get('status') == 0:
-                            logger.info(
-                                f"{self.session_name} | Claimed combo | Points: <light-red>+{combo_info_data.get('score')}</light-red> | Combo code: <light-red>{combo_info_data.get('code')}</light-red>")
-                    
-                    next_combo_check = int(datetime.fromisoformat(combo_info_data.get('end')).timestamp())
-
-            await asyncio.sleep(1.5)
-
-
-            if settings.AUTO_DAILY_REWARD:
-                claim_daily = await self.claim_daily(http_client=http_client)
-                if claim_daily and 'status' in claim_daily and claim_daily.get("status", 400) != 400:
-                    logger.info(f"{self.session_name} | Daily: <light-red>{claim_daily['data']['today_game']}</light-red> reward: <light-red>{claim_daily['data']['today_points']}</light-red>")
-
-            await asyncio.sleep(1.5)
-
-            if settings.AUTO_PLAY_GAME:
-                tickets = balance.get('data', {}).get('play_passes', 0)
-
-                logger.info(f"{self.session_name} | Tickets: <light-red>{tickets}</light-red>")
+                            elif data_stars.get('status') < 3 and datetime.fromisoformat(data_stars.get('endTime')) > datetime.now():
+                                start_stars_claim = await self.start_stars_claim(http_client=http_client, data={'task_id': data_stars.get('taskId')})
+                                claim_stars = await self.claim_task(http_client=http_client, data={'task_id': data_stars.get('taskId')})
+                                if claim_stars is not None and claim_stars.get('status') == 0 and start_stars_claim is not None and start_stars_claim.get('status') == 0:
+                                    logger.info(f"{self.session_name} | Claimed stars | Stars: <light-red>+{start_stars_claim['data'].get('stars', 0)}</light-red>")
+                            
+                            next_stars_check = int(datetime.fromisoformat(get_stars['data'].get('endTime')).timestamp())
 
                 await asyncio.sleep(1.5)
-                if tickets > 0:
-                    logger.info(f"{self.session_name} | Start ticket games...")
-                    games_points = 0
-                    while tickets > 0:
-                        play_game = await self.play_game(http_client=http_client)
-                        if play_game and 'status' in play_game:
-                            if play_game.get('status') == 0:
-                                await asyncio.sleep(30)
-                                claim_game = await self.claim_game(http_client=http_client, points=randint(settings.POINTS_COUNT[0], settings.POINTS_COUNT[1]))
-                                if claim_game and 'status' in claim_game:
-                                    if claim_game['status'] == 500 and claim_game['message'] == 'game not start':
-                                        continue
-                                    
-                                    if claim_game.get('status') == 0:
-                                        tickets -= 1
-                                        games_points += claim_game.get('data').get('points')
-                                        await asyncio.sleep(1.5)
-                    logger.info(f"{self.session_name} | Games finish! Claimed points: <light-red>{games_points}</light-red>")
 
-            if settings.AUTO_TASK:
-                logger.info(f"{self.session_name} | Start checking tasks.")
-                tasks = await self.get_tasks(http_client=http_client)
-                tasks_list = []
-                if tasks and tasks.get("status", 500) == 0:
-                    for category, task_group in tasks["data"].items():
-                        for task in task_group:
-                            if task.get('enable') and not task.get('invisible', False):
-                                if task.get('startTime') and task.get('endTime'):
-                                    task_start = convert_to_local_and_unix(task['startTime'])
-                                    task_end = convert_to_local_and_unix(task['endTime'])
-                                    if task_start <= time() <= task_end:
+                if settings.AUTO_CLAIM_COMBO and next_combo_check < time():
+                    combo_info = await self.get_combo(http_client)
+                    combo_info_data = combo_info.get('data', [])[0] if combo_info.get('data') else []
+
+                    if combo_info and combo_info.get('status') == 0 and combo_info_data:
+                        if combo_info_data.get('status') > 0:
+                            logger.info(f"{self.session_name} | Combo already claimed | Skipping....")
+                        elif combo_info_data.get('status') == 0 and datetime.fromisoformat(
+                                combo_info_data.get('end')) > datetime.now():
+                            claim_combo = await self.claim_task(http_client, data = { 'task_id': combo_info_data.get('taskId') })
+
+                            if claim_combo is not None and claim_combo.get('status') == 0:
+                                logger.info(
+                                    f"{self.session_name} | Claimed combo | Points: <light-red>+{combo_info_data.get('score')}</light-red> | Combo code: <light-red>{combo_info_data.get('code')}</light-red>")
+                        
+                        next_combo_check = int(datetime.fromisoformat(combo_info_data.get('end')).timestamp())
+
+                await asyncio.sleep(1.5)
+
+
+                if settings.AUTO_DAILY_REWARD:
+                    claim_daily = await self.claim_daily(http_client=http_client)
+                    if claim_daily and 'status' in claim_daily and claim_daily.get("status", 400) != 400:
+                        logger.info(f"{self.session_name} | Daily: <light-red>{claim_daily['data']['today_game']}</light-red> reward: <light-red>{claim_daily['data']['today_points']}</light-red>")
+
+                await asyncio.sleep(1.5)
+
+                if settings.AUTO_PLAY_GAME:
+                    tickets = balance.get('data', {}).get('play_passes', 0)
+
+                    logger.info(f"{self.session_name} | Tickets: <light-red>{tickets}</light-red>")
+
+                    await asyncio.sleep(1.5)
+                    if tickets > 0:
+                        logger.info(f"{self.session_name} | Start ticket games...")
+                        games_points = 0
+                        while tickets > 0:
+                            play_game = await self.play_game(http_client=http_client)
+                            if play_game and 'status' in play_game:
+                                if play_game.get('status') == 0:
+                                    await asyncio.sleep(30)
+                                    claim_game = await self.claim_game(http_client=http_client, points=randint(settings.POINTS_COUNT[0], settings.POINTS_COUNT[1]))
+                                    if claim_game and 'status' in claim_game:
+                                        if claim_game['status'] == 500 and claim_game['message'] == 'game not start':
+                                            continue
+                                        
+                                        if claim_game.get('status') == 0:
+                                            tickets -= 1
+                                            games_points += claim_game.get('data').get('points')
+                                            await asyncio.sleep(1.5)
+                        logger.info(f"{self.session_name} | Games finish! Claimed points: <light-red>{games_points}</light-red>")
+
+                if settings.AUTO_TASK:
+                    logger.info(f"{self.session_name} | Start checking tasks.")
+                    tasks = await self.get_tasks(http_client=http_client)
+                    tasks_list = []
+                    if tasks and tasks.get("status", 500) == 0:
+                        for category, task_group in tasks["data"].items():
+                            for task in task_group:
+                                if task.get('enable') and not task.get('invisible', False):
+                                    if task.get('startTime') and task.get('endTime'):
+                                        task_start = convert_to_local_and_unix(task['startTime'])
+                                        task_end = convert_to_local_and_unix(task['endTime'])
+                                        if task_start <= time() <= task_end:
+                                            tasks_list.append(task)
+                                    elif task.get('type') not in ['wallet', 'mysterious', 'classmate', 'classmateInvite', 'classmateInviteBack']:
                                         tasks_list.append(task)
-                                elif task.get('type') not in ['wallet', 'mysterious', 'classmate', 'classmateInvite', 'classmateInviteBack']:
-                                    tasks_list.append(task)
-                
-                for task in tasks_list:
-                    wait_second = task.get('waitSecond', 0)
-                    starttask = await self.start_task(http_client=http_client, data={'task_id': task['taskId']})
-                    if starttask and starttask.get('data', 'Failed') == 'ok':
-                        logger.info(f"{self.session_name} | Start task <light-red>{task['name']}.</light-red> Wait {wait_second}s 🍅")
-                        await asyncio.sleep(wait_second + 3)
-                        await self.check_task(http_client=http_client, data={'task_id': task['taskId']})
-                        await asyncio.sleep(3)
-                        claim = await self.claim_task(http_client=http_client, data={'task_id': task['taskId']})
-                        if claim:
-                            if claim['status'] == 0:
-                                reward = task.get('score', 'unknown')
-                                logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! Reward: {reward} 🍅")
-                            else:
-                                logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> not claimed. Reason: {claim.get('message', 'Unknown error')} 🍅")
-                        await asyncio.sleep(2)
-                
-            if http_client and not http_client.closed:
-                await http_client.close()
-                if proxy_conn and not proxy_conn.closed:
-                        proxy_conn.close()
+                    
+                    for task in tasks_list:
+                        wait_second = task.get('waitSecond', 0)
+                        starttask = await self.start_task(http_client=http_client, data={'task_id': task['taskId']})
+                        if starttask and starttask.get('data', 'Failed') == 'ok':
+                            logger.info(f"{self.session_name} | Start task <light-red>{task['name']}.</light-red> Wait {wait_second}s 🍅")
+                            await asyncio.sleep(wait_second + 3)
+                            await self.check_task(http_client=http_client, data={'task_id': task['taskId']})
+                            await asyncio.sleep(3)
+                            claim = await self.claim_task(http_client=http_client, data={'task_id': task['taskId']})
+                            if claim:
+                                if claim['status'] == 0:
+                                    reward = task.get('score', 'unknown')
+                                    logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> claimed! Reward: {reward} 🍅")
+                                else:
+                                    logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> not claimed. Reason: {claim.get('message', 'Unknown error')} 🍅")
+                            await asyncio.sleep(2)
+            finally:
+                if http_client and not http_client.closed:
+                    await http_client.close()
+                    if proxy_conn and not proxy_conn.closed:
+                            proxy_conn.close()
                         
             sleep_time = end_farming_dt - time()
             logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
