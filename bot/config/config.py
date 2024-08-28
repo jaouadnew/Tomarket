@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     REF_ID: str = '00005UEJ'
     
     FAKE_USERAGENT: bool = True
+    POINTS_COUNT: list[int] = [450, 600]
     AUTO_PLAY_GAME: bool = True
     AUTO_TASK: bool = True
     AUTO_DAILY_REWARD: bool = True
