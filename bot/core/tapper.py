@@ -242,7 +242,7 @@ class Tapper:
                             logger.info(f"{self.session_name} | Farm started.. 🍅")
                             end_farming_dt = start_farming['data']['end_at'] + 240
                             logger.info(f"{self.session_name} | Next farming claim in <light-red>{round((end_farming_dt - time()) / 60)}m.</light-red>")
-                    elif claim_farming.get('status'):
+                    elif claim_farming.get('status') == 0:
                         farm_points = claim_farming['data']['claim_this_time']
                         logger.info(f"{self.session_name} | Success claim farm. Reward: <light-red>{farm_points}</light-red> 🍅")
                         start_farming = await self.start_farming(http_client=http_client)
@@ -293,7 +293,7 @@ class Tapper:
 
             if settings.AUTO_DAILY_REWARD:
                 claim_daily = await self.claim_daily(http_client=http_client)
-                if claim_daily and claim_daily.get("status", 400) != 400:
+                if claim_daily and 'status' in claim_daily and claim_daily.get("status", 400) != 400:
                     logger.info(f"{self.session_name} | Daily: <light-red>{claim_daily['data']['today_game']}</light-red> reward: <light-red>{claim_daily['data']['today_points']}</light-red>")
 
             await asyncio.sleep(1.5)
@@ -344,11 +344,9 @@ class Tapper:
                     starttask = await self.start_task(http_client=http_client, data={'task_id': task['taskId']})
                     if starttask and starttask.get('data', 'Failed') == 'ok':
                         logger.info(f"{self.session_name} | Start task <light-red>{task['name']}.</light-red> Wait {wait_second}s 🍅")
-                        await asyncio.sleep(wait_second)
-                        
-                        if task.get('needVerify'):
-                            await self.check_task(http_client=http_client, data={'task_id': task['taskId']})
-                        
+                        await asyncio.sleep(wait_second + 3)
+                        await self.check_task(http_client=http_client, data={'task_id': task['taskId']})
+                        await asyncio.sleep(3)
                         claim = await self.claim_task(http_client=http_client, data={'task_id': task['taskId']})
                         if claim:
                             if claim['status'] == 0:
