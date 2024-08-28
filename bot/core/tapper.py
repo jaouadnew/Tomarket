@@ -216,9 +216,9 @@ class Tapper:
                 access_token = await self.login(http_client=http_client, tg_web_data=init_data, ref_id=ref_id)
                 if not access_token:
                     logger.info(f"{self.session_name} | Failed login")
-                    logger.info(f"{self.session_name} | Sleep <light-red>3600s</light-red>")
-                    await asyncio.sleep(delay=3600)
-                    return
+                    logger.info(f"{self.session_name} | Sleep <light-red>300s</light-red>")
+                    await asyncio.sleep(delay=300)
+                    continue
                 else:
                     logger.info(f"{self.session_name} | <light-red>🍅 Login successful</light-red>")
                     http_client.headers["Authorization"] = f"{access_token}"
