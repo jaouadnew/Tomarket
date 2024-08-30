@@ -358,9 +358,9 @@ class Tapper:
                                 else:
                                     logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> not claimed. Reason: {claim.get('message', 'Unknown error')} 🍅")
                             await asyncio.sleep(2)
-                            sleep_time = end_farming_dt - time()
-                            logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
-                            await asyncio.sleep(sleep_time)
+                sleep_time = end_farming_dt - time()
+                logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
+                await asyncio.sleep(sleep_time)
                 await http_client.close()
                 if proxy_conn:
                     if not proxy_conn.closed:
