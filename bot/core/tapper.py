@@ -179,6 +179,13 @@ class Tapper:
     async def get_tasks(self, http_client):
         return await self.make_request(http_client, "POST", "/tasks/list", json={'language_code': 'en'})
 
+    @error_handler
+    async def get_rank_data(self, http_client):
+        return await self.make_request(http_client, "POST", "/rank/data")
+
+    @error_handler
+    async def upgrade_rank(self, http_client, stars: int):
+        return await self.make_request(http_client, "POST", "/rank/upgrade", json={'stars': stars})
     
     async def run(self) -> None:
 
@@ -358,6 +365,21 @@ class Tapper:
                                 else:
                                     logger.info(f"{self.session_name} | Task <light-red>{task['name']}</light-red> not claimed. Reason: {claim.get('message', 'Unknown error')} 🍅")
                             await asyncio.sleep(2)
+
+                await asyncio.sleep(1.5)
+
+                if settings.AUTO_RANK_UPGRADE:
+                    rank_data = await self.get_rank_data(http_client)
+                    unused_stars = rank_data.get('data').get('unusedStars')
+                    logger.info(f"{self.session_name} | Unused stars {unused_stars}")
+                    if unused_stars > 0:
+                        upgrade_rank = await self.upgrade_rank(http_client=http_client, stars=unused_stars)
+                        if upgrade_rank.get('status') == 0:
+                            logger.info(f"{self.session_name} | Rank upgraded! 🍅")
+                        else:
+                            logger.info(
+                                f"{self.session_name} | Rank not upgraded. Reason: {upgrade_rank.get('message', 'Unknown error')} 🍅")
+
                 sleep_time = end_farming_dt - time()
                 logger.info(f'{self.session_name} | Sleep <light-red>{round(sleep_time / 60, 2)}m.</light-red>')
                 await asyncio.sleep(sleep_time)

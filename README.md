@@ -20,6 +20,7 @@
 |                      Auto Daily Reward                              |     ✅     |
 |                       Auto Claim Stars                              |     ✅     |
 |                       Auto Claim Combo                              |     ✅     |
+|       Auto Rank Upgrade        |     ✅     |
 
 
 ## [Settings](https://github.com/GravelFire/Tomarket/blob/main/.env-example/)
@@ -35,6 +36,7 @@
 |  **AUTO_DAILY_REWARD**  |        Automatically claim daily rewards (True / False)                                |
 |  **AUTO_CLAIM_STARS**  |        Automatically claim star rewards (True / False)                                 |
 |  **AUTO_CLAIM_COMBO**   |        Automatically claim combo rewards (True / False)                                |
+|    **AUTO_RANK_UPGRADE**    |                  Automatically upgrade rank (True / False)                   |
 | **USE_RANDOM_DELAY_IN_RUN** | Whether to use random delay at startup (True / False)                              |
 | **RANDOM_DELAY_IN_RUN** |        Random delay at startup (e.g. [0, 15])                                          |
 | **USE_PROXY_FROM_FILE** |        Whether to use a proxy from the `bot/config/proxies.txt` file (True / False)    |
