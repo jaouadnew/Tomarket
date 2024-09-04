@@ -370,11 +370,11 @@ class Tapper:
 
                 if settings.AUTO_RANK_UPGRADE:
                     rank_data = await self.get_rank_data(http_client)
-                    unused_stars = rank_data.get('data').get('unusedStars')
+                    unused_stars = rank_data.get('data', {}).get('unusedStars', 0)
                     logger.info(f"{self.session_name} | Unused stars {unused_stars}")
                     if unused_stars > 0:
                         upgrade_rank = await self.upgrade_rank(http_client=http_client, stars=unused_stars)
-                        if upgrade_rank.get('status') == 0:
+                        if upgrade_rank.get('status', 500) == 0:
                             logger.info(f"{self.session_name} | Rank upgraded! 🍅")
                         else:
                             logger.info(
