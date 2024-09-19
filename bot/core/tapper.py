@@ -113,7 +113,6 @@ class Tapper:
     async def make_request(self, http_client, method, endpoint=None, url=None, **kwargs):
         full_url = url or f"https://api-web.tomarket.ai/tomarket-game/v1{endpoint or ''}"
         response = await http_client.request(method, full_url, **kwargs)
-        
         return await response.json()
         
     @error_handler
@@ -182,7 +181,11 @@ class Tapper:
 
     @error_handler
     async def create_rank(self, http_client):
-        return await self.make_request(http_client, "POST", "/rank/evalute") and await self.make_request(http_client, "POST", "/rank/create")
+        evalute = await self.make_request(http_client, "POST", "/rank/evalute")
+        if evalute and evalute.get('status', 200) != 404:
+            await self.make_request(http_client, "POST", "/rank/create")
+            return True
+        return False
     
     @error_handler
     async def get_rank_data(self, http_client):
