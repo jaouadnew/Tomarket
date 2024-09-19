@@ -151,6 +151,11 @@ class Tapper:
     async def claim_game(self, http_client, points=None):
         return await self.make_request(http_client, "POST", "/game/claim", json={"game_id": "59bcd12e-04e2-404c-a172-311a0084587d", "points": points})
 
+
+    @error_handler
+    async def get_tasks(self, http_client):
+        return await self.make_request(http_client, "POST", "/tasks/list", json={'language_code': 'en'})
+
     @error_handler
     async def start_task(self, http_client, data):
         return await self.make_request(http_client, "POST", "/tasks/start", json=data)
@@ -176,9 +181,9 @@ class Tapper:
         return await self.make_request(http_client, "POST", "/tasks/classmateStars", json=data)
 
     @error_handler
-    async def get_tasks(self, http_client):
-        return await self.make_request(http_client, "POST", "/tasks/list", json={'language_code': 'en'})
-
+    async def create_rank(self, http_client):
+        return self.make_request(http_client, "POST", "/rank/evalute") and await self.make_request(http_client, "POST", "/rank/create")
+    
     @error_handler
     async def get_rank_data(self, http_client):
         return await self.make_request(http_client, "POST", "/rank/data")
@@ -352,7 +357,8 @@ class Tapper:
                     for task in tasks_list:
                         wait_second = task.get('waitSecond', 0)
                         starttask = await self.start_task(http_client=http_client, data={'task_id': task['taskId']})
-                        if starttask and starttask.get('data', 'Failed') == 'ok':
+                        task_data = starttask.get('data', {}) if starttask else None
+                        if task_data == 'ok' or task_data.get('status') == 1 if task_data else False:
                             logger.info(f"{self.session_name} | Start task <light-red>{task['name']}.</light-red> Wait {wait_second}s 🍅")
                             await asyncio.sleep(wait_second + 3)
                             await self.check_task(http_client=http_client, data={'task_id': task['taskId']})
@@ -368,8 +374,11 @@ class Tapper:
 
                 await asyncio.sleep(1.5)
 
+                if await self.create_rank(http_client=http_client):
+                    logger.info(f"{self.session_name} | Rank created! 🍅")
+                
                 if settings.AUTO_RANK_UPGRADE:
-                    rank_data = await self.get_rank_data(http_client)
+                    rank_data = await self.get_rank_data(http_client=http_client)
                     unused_stars = rank_data.get('data', {}).get('unusedStars', 0)
                     logger.info(f"{self.session_name} | Unused stars {unused_stars}")
                     if unused_stars > 0:
