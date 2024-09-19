@@ -19,6 +19,7 @@
 |                      Авто Ежедневная Награда                           |       ✅        |
 |                       Авто Получение Звезд                             |       ✅        |
 |                       Авто Получение Комбо                             |       ✅        |
+|       Авто Прокачка уровня        |       ✅        |
 
 ## [Настройки](https://github.com/GravelFire/Tomarket/blob/main/.env-example/)
 |           Настройка           |                                       Описание                                        |
@@ -33,6 +34,7 @@
 |    **AUTO_DAILY_REWARD**      |        Автоматически получать ежедневные награды (True / False)                       |
 |    **AUTO_CLAIM_STARS**      |        Автоматически получать звездные награды (True / False)                         |
 |     **AUTO_CLAIM_COMBO**      |        Автоматически получать комбо-награды (True / False)                            |
+|    **AUTO_RANK_UPGRADE**    |  Автоматически прокачивать уровень при наличии звезд (True / False)  |
 | **USE_RANDOM_DELAY_IN_RUN**   |        Использовать случайную задержку при запуске (True / False)                     |
 |   **RANDOM_DELAY_IN_RUN**     |        Случайная задержка при запуске (например, [0, 15])                             |
 |  **USE_PROXY_FROM_FILE**      |        Использовать прокси из файла `bot/config/proxies.txt` (True / False)           |
