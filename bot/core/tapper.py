@@ -192,8 +192,7 @@ class Tapper:
     async def upgrade_rank(self, http_client, stars: int):
         return await self.make_request(http_client, "POST", "/rank/upgrade", json={'stars': stars})
     
-    async def run(self) -> None:
-
+    async def run(self) -> None:        
         if settings.USE_RANDOM_DELAY_IN_RUN:
             random_delay = randint(settings.RANDOM_DELAY_IN_RUN[0], settings.RANDOM_DELAY_IN_RUN[1])
             logger.info(f"{self.tg_client.name} | Bot will start in <light-red>{random_delay}s</light-red>")
@@ -207,15 +206,15 @@ class Tapper:
         if settings.FAKE_USERAGENT:            
             http_client.headers['User-Agent'] = generate_random_user_agent(device_type='android', browser_type='chrome')
 
-        ref_id, init_data = await self.get_tg_web_data()
-
         # ``
         # Наши переменные
         # ``
         end_farming_dt = 0
+        token_expiration = 0
         tickets = 0
         next_stars_check = 0
         next_combo_check = 0
+        
         while True:
             try:
                 if http_client.closed:
@@ -227,17 +226,24 @@ class Tapper:
                     http_client = aiohttp.ClientSession(headers=headers, connector=proxy_conn)
                     if settings.FAKE_USERAGENT:            
                         http_client.headers['User-Agent'] = generate_random_user_agent(device_type='android', browser_type='chrome')
-                access_token = await self.login(http_client=http_client, tg_web_data=init_data, ref_id=ref_id)
-                if not access_token:
-                    logger.info(f"{self.session_name} | Failed login")
-                    logger.info(f"{self.session_name} | Sleep <light-red>300s</light-red>")
-                    await asyncio.sleep(delay=300)
-                    continue
-                else:
-                    logger.info(f"{self.session_name} | <light-red>🍅 Login successful</light-red>")
-                    http_client.headers["Authorization"] = f"{access_token}"
+                current_time = time()
+                if current_time >= token_expiration:
+                    if (token_expiration != 0): # Чтобы не пугались, скрою от вас когда происходит первый запуск
+                        logger.info(f"{self.session_name} | Token expired, refreshing...")
+                    ref_id, init_data = await self.get_tg_web_data()
+                    access_token = await self.login(http_client=http_client, tg_web_data=init_data, ref_id=ref_id)
+                    
+                    if not access_token:
+                        logger.info(f"{self.session_name} | Failed login")
+                        logger.info(f"{self.session_name} | Sleep <light-red>300s</light-red>")
+                        await asyncio.sleep(delay=300)
+                        continue
+                    else:
+                        logger.info(f"{self.session_name} | <light-red>🍅 Login successful</light-red>")
+                        http_client.headers["Authorization"] = f"{access_token}"
+                        token_expiration = current_time + 3600
+                        
                 await asyncio.sleep(delay=1)
-
                 balance = await self.get_balance(http_client=http_client)
                 available_balance = balance['data']['available_balance']
                 logger.info(f"{self.session_name} | Current balance: <light-red>{available_balance}</light-red>")
