@@ -182,7 +182,7 @@ class Tapper:
 
     @error_handler
     async def create_rank(self, http_client):
-        return self.make_request(http_client, "POST", "/rank/evalute") and await self.make_request(http_client, "POST", "/rank/create")
+        return await self.make_request(http_client, "POST", "/rank/evalute") and await self.make_request(http_client, "POST", "/rank/create")
     
     @error_handler
     async def get_rank_data(self, http_client):
